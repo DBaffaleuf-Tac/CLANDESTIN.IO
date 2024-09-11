@@ -6,3 +6,4 @@ langchain
 pandasai
 polars
 tqdm
+dask

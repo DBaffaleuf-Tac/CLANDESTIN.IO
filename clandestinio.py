@@ -9,6 +9,8 @@ import sys, getopt, re, string, os.path, argparse, time, datetime
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
+import dask.dataframe as ddf
+from threading import Thread
 
 # --------------------------------------------------------------------------------------------------------------
 # FUNCTION checkParams()
@@ -235,9 +237,16 @@ def main():
         # Pseudonymization Loop of batchsize rows
         print(f"-> Proceeding {len(sourcerecords)} rows in {batches} batches of {batchsize}  rows... ")
         
-        # single / multi threaded depending on --parallel
+#        # single / multi threaded depending on --parallel
+#        ______________________________________________________________________________________________
+#       / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / /
+#       / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / /
+#       / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / /
+#       /_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/ 
+        
         if __PARALLEL is True:
-            # MULTI - THREADED
+            # MULTI - THREADED ////////////////////////////////////////////////////////////////////////>
+            # Always use (number of cores -2) fro DOP to avoid starvation
             cpu_count=os.cpu_count()
             if cpu_count >= 4:
                 dop=cpu_count - 2
@@ -249,8 +258,20 @@ def main():
                 print(f'Warning : not enough CPUs for --parallel, minimum is 4, actual is {cpu_count}')
                 print('Exiting ...')
                 sys.exit(Errors.FATAL)
+
+            # First convert the initial DF sourcerecords to Dask DF using DOP partitions
+            # Then assign each partition to a thread and run pseudonymize
+            DASK_sourcerecords = ddf.from_pandas(sourcerecords,npartitions=dop)
+            '''
+            for i in range(1,dop):
+                worker = Thread(target=pseudonymize, args=(DASK_sourcerecords[i],GDPRcolumnsList,batches,batchsize,settings))
+                worker.start()
+            '''
+
+
+
         else:
-            # SINGLE - THREADED
+            # SINGLE - THREADED -------------------------------------------------------------------------> 
             pseudonymizedData, reduxRecords = pseudonymize(sourcerecords,GDPRcolumnsList,batches,batchsize,settings)
 
 

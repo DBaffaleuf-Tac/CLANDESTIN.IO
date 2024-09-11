@@ -1,0 +1,74 @@
+/*
+ File "C:\Users\dbaff\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandasai\pipelines\chat\code_cleaning.py", 
+ line 95, in execute
+    code_to_run = self.get_code_to_run(input, code_context)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dbaff\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandasai\pipelines\chat\code_cleaning.py", 
+  line 152, in get_code_to_run
+    code_to_run = self._clean_code(code, context)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dbaff\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandasai\pipelines\chat\code_cleaning.py", 
+  line 515, in _clean_code
+    self._extract_fix_dataframe_redeclarations(node, clean_code_lines)
+  File "C:\Users\dbaff\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandasai\pipelines\chat\code_cleaning.py", 
+  line 420, in _extract_fix_dataframe_redeclarations
+    exec(code, env)
+  File "<string>", line 18, in <module>
+
+AttributeError: 'NoneType' object has no attribute 'split'
+*/
+
+<dataframe>\n
+	dfs[0]:100x6\n
+	ABOUTME,AGE,DISPLAYNAME,EMAILHASH,LOCATION,WEBSITEURL\r\n
+	"<p>Application developer</p>\n"
+	,,Bartosz Radaczyński,,,http://glob.com.au/\r\n
+	,,Norm,,"Sydney, Australia",http://tuffin.co.za\r\n
+	"<p>I\'m a software developer from Gothenburg, Sweden. I work with .NET and Industrial IT &amp; Automation.</p>\n"
+	,,binOr,,"London, United Kingdom",\r\n
+</dataframe>
+
+You generated this python code:\n
+# TODO: import the required dependencies\n
+import pandas as pd\nimport numpy as np\n
+import matplotlib.pyplot as plt\n
+from faker import Faker\n
+fake = Faker()\n\n
+
+# Function to generate fictional data based on country of origin\n
+def generate_fictional_data(country):\n    
+	if country == \'United States\':\n
+	return {\n            
+		\'ABOUTME\': fake.text(),\n            
+		\'AGE\': fake.random_int(min=18, max=100),\n            
+		\'DISPLAYNAME\': fake.name(),\n            
+		\'EMAILHASH\': fake.email(),\n            
+		\'LOCATION\': fake.city() + \', \' + fake.state(),\n            
+		\'WEBSITEURL\': fake.url()\n        
+	}\n    
+	else:\n        
+	return {\n            
+		\'ABOUTME\': fake.text(),\n            
+		\'AGE\': fake.random_int(min=18, max=100),\n            
+		\'DISPLAYNAME\': fake.name(),\n            
+		\'EMAILHASH\': fake.email(),\n            
+		\'LOCATION\': fake.city() + \', \' + fake.country(),\n            
+		\'WEBSITEURL\': fake.url()\n        
+	}\n
+\n
+# Generate fictional data for each row\n
+fictional_data = []\n
+for index, row in dfs[0].iterrows():\n    
+	country = row[\'LOCATION\'].split(\', \')[-1]\n    
+	fictional_data.append(generate_fictional_data(country))\n\n
+	
+# Create a new DataFrame with fictional data\n
+new_df = pd.DataFrame(fictional_data)\n\n
+
+# Declare result var: \n
+result = {\n
+    "type": "dataframe", \n    
+	"value": new_df\n}\n\n
+
+####  object has no attribute \'split\'\n\n\nFix the python code above and return the new python code:\n
+#### https://github.com/Sinaptik-AI/pandas-ai/issues/1098

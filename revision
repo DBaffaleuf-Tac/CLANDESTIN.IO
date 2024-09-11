@@ -1,0 +1,27 @@
+# @(#) ==================================================================================================
+# @(#)                 CLANDESTIN.IO - https://github.com/DBaffaleuf-Tac/clandestin.io
+# @(#)                         Data pseudonymizer based on generative AI    
+# @(#)                             (dbaffaleuf-tac@gmail.com)
+# @(#)
+# @(#) Data Sources compatibility:
+# @(#) - SQL Server 2019+
+# @(#) - PostgreSQL 14+
+# @(#) - MySQL 8+ / MariaDB 10.4+
+# @(#) - MongoDB 5+
+# @(#)
+# @(#) Revision
+# @(#) -------------------------------------------------------------------------------------------------------
+# @(#) 19/08/2024       1.0         TAC         Creation
+# @(#) -------------------------------------------------------------------------------------------------------
+# @(#)
+# @(#) Usage:
+# @(#)    -h / --help       : help & usage 
+# @(#)    -P / --provider   : { 'mssql' | 'my' | 'pg' | 'mg' } 
+# @(#)    -D / --database   : database name 
+# @(#)    -T / --tablename  : full qualified name of the target table / mongo collection / excel tab 
+# @(#)    -C / --columnsmap : forcing a comma-separated key-value pairs of column_name:type ie 'fname:firstname,lname:lastname' 
+# @(#)    -R / --dryrun     : == True by default, presents the results but does not actually subsitute the data
+# @(#)    -V / --verbose    : Verbose mode, false by default
+# @(#)    
+# @(#)   Example : python clandestinio --provider='mssql' --database='stackoverflow' --tablename='dbo.Users'
+# @(#) -------------------------------------------------------------------------------------------------- 

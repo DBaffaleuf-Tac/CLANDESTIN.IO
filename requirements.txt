@@ -1,0 +1,8 @@
+pyodbc
+pandas
+sqlalchemy
+groq
+langchain
+pandasai
+polars
+tqdm

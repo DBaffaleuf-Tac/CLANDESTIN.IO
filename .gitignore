@@ -1,0 +1,9 @@
+.env
+pandasai.log
+prompts.txt
+cache/
+exports
+lib/__pycache__
+PluginDB/__pycache__
+tests/*
+doc/*

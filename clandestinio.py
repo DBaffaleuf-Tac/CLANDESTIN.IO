@@ -236,23 +236,9 @@ def main():
         print(f"-> Proceeding {len(sourcerecords)} rows in {batches} batches of {batchsize}  rows... ")
         
         # single / multi threaded depending on --parallel
-        if __PARALLEL is True:
-            # MULTI - THREADED
-            cpu_count=os.cpu_count()
-            if cpu_count >= 4:
-                dop=cpu_count - 2
-            if __VERBOSE == 1:
-                print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
-                print(f"DEGREE OF PARALLELISM : \n {str(dop)}")
-
-            else:
-                print(f'Warning : not enough CPUs for --parallel, minimum is 4, actual is {cpu_count}')
-                print('Exiting ...')
-                sys.exit(Errors.FATAL)
-        else:
-            # SINGLE - THREADED
-            pseudonymizedData, reduxRecords = pseudonymize(sourcerecords,GDPRcolumnsList,batches,batchsize,settings)
-
+        # --parallel not used at this point
+        # SINGLE - THREADED
+        pseudonymizedData, reduxRecords = pseudonymize(sourcerecords,GDPRcolumnsList,batches,batchsize,settings)
 
         if __VERBOSE == 1:
             print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')

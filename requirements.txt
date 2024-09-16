@@ -1,9 +1,8 @@
 pyodbc
-pandas
+pandas==1.5.3
 sqlalchemy
 groq
 langchain
 pandasai
 polars
 tqdm
-dask

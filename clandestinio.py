@@ -9,8 +9,7 @@ import sys, getopt, re, string, os.path, argparse, time, datetime
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-import dask.dataframe as ddf
-from threading import Thread
+from multiprocessing import Pool
 
 # --------------------------------------------------------------------------------------------------------------
 # FUNCTION checkParams()
@@ -86,6 +85,9 @@ def pseudonymize(sourcerecords,GDPRcolumnsList,batches,batchsize,settings):
     
     return pseudonymizedData, reduxRecords
 
+
+def lendf(df):
+    return len(df)
 
 #  -------------------------------------------------------------------------------------------------------------
 # FUNCTION main()
@@ -227,15 +229,16 @@ def main():
             print('\n')
 
         # IA -> Local pseudonymization ---------------------------------------------------------------        
+        srlen=len(sourcerecords)
         batchsize=int(settings["BATCHSIZE"])
         if batchsize == 0:
             print('BATCHSIZE CANNOT BE ZERO, CHANGE THE VALUE IN .ENV FILE !!! ')
             sys.exit(Errors.FATAL)
         else:
-            batches = int(len(sourcerecords)/batchsize) + 1
+            batches = int(srlen/batchsize) + 1
                
         # Pseudonymization Loop of batchsize rows
-        print(f"-> Proceeding {len(sourcerecords)} rows in {batches} batches of {batchsize}  rows... ")
+        print(f"-> Proceeding {srlen} rows in {batches} batches of {batchsize}  rows... ")
         
 #        # single / multi threaded depending on --parallel
 #        ______________________________________________________________________________________________
@@ -246,7 +249,7 @@ def main():
         
         if __PARALLEL is True:
             # MULTI - THREADED ////////////////////////////////////////////////////////////////////////>
-            # Always use (number of cores -2) fro DOP to avoid starvation
+            # Always use (number of cores -2) for DOP to avoid starvation
             cpu_count=os.cpu_count()
             if cpu_count >= 4:
                 dop=cpu_count - 2
@@ -259,28 +262,46 @@ def main():
                 print('Exiting ...')
                 sys.exit(Errors.FATAL)
 
-            # First convert the initial DF sourcerecords to Dask DF using DOP partitions
-            # Then assign each partition to a thread and run pseudonymize
-            DASK_sourcerecords = ddf.from_pandas(sourcerecords,npartitions=dop)
-            '''
-            for i in range(1,dop):
-                worker = Thread(target=pseudonymize, args=(DASK_sourcerecords[i],GDPRcolumnsList,batches,batchsize,settings))
-                worker.start()
-            '''
+            # Prepare a pool of DOP processes
+            # and an array of Async Objects
+            wPool = Pool(dop)
+            asyncObjects = []
 
+            # Split vertically the initial DF sourcerecords into DOP partitions
+            # Then assign each partition to a Process in the pool and run pseudonymize
+            # where :
+            # - srlen     : is the size of the total dataset 
+            # - interval  : is the number of records per partition
+            # - dop       : is the nuber of partitions
+            # RE-CHECK : https://ponder.io/how-do-we-parallelized-600-pandas-functions-with-modin/
+            # https://github.com/modin-project/modin 
+            interval=int(srlen/dop+1)
+            for index in np.arange(1,srlen,interval):
+                pdf=sourcerecords.iloc[index:index+interval]             
+                res = wPool.apply_async(pseudonymize,args=(pdf,GDPRcolumnsList,batches,batchsize,settings))
+                asyncObjects.append(res)
 
+            wPool.close()
+            wPool.join()
+
+            #for i in range(0,len(asyncObjects)):
+                #print(f'tour {i}, res: {asyncObjects[i].get()}')
+                #pseudonymizedDataTemp, reduxRecordsTemp = asyncObjects[i].get()
+                #print(f'tour {i}, len PD : {len(pseudonymizedDataTemp)}, len RR : {len(reduxRecordsTemp)}')
+                #pd.concat([pseudonymizedData,pseudonymizedDataTemp],ignore_index=False)
+                #pd.concat([reduxRecordsTemp,reduxRecords],ignore_index=False)
 
         else:
             # SINGLE - THREADED -------------------------------------------------------------------------> 
             pseudonymizedData, reduxRecords = pseudonymize(sourcerecords,GDPRcolumnsList,batches,batchsize,settings)
 
-
+        '''
         if __VERBOSE == 1:
             print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
             print(f"ORIGINAL DATA : \n {reduxRecords}")
             print(f"PSEUDOMYNIZED DATA : \n {pseudonymizedData}")
             print('\n')
-        
+        '''
         # Import local pseudonymized -----------------------------------------------------------------
 
         # Final substitution -------------------------------------------------------------------------

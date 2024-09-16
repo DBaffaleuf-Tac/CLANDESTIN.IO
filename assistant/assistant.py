@@ -25,11 +25,11 @@ class assistant():
 
 
     def replaceDPRData(self,groq_api_key,model,temperature,sampledata):
-        llm = ChatGroq(model = model,temperature = temperature, api_key = groq_api_key)
+        llm = ChatGroq(model = model,temperature = temperature, api_key = groq_api_key)       
         # Adding https://pypi.org/project/Faker/ to the whitelist of dependencies
-        sdf = SmartDataframe(sampledata,config = {'llm':llm, "custom_whitelisted_dependencies": ["faker"]})
+        sdf = SmartDataframe(sampledata,config = {'llm':llm, "custom_whitelisted_dependencies": ["faker"]})       
         try:
-            redux = sdf.chat(AIPrompts.replaceGDPRData)
+            redux = sdf.chat(AIPrompts.replaceGDPRData)  
             if type(redux) is pd.core.frame.DataFrame:
                 return redux
             else:

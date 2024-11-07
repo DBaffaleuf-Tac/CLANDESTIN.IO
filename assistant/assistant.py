@@ -24,7 +24,7 @@ class assistant():
             return False
 
 
-    def replaceDPRData(self,groq_api_key,model,temperature,sampledata):
+    def replaceGDPRData(self,groq_api_key,model,temperature,sampledata):
         llm = ChatGroq(model = model,temperature = temperature, api_key = groq_api_key)
         # Adding https://pypi.org/project/Faker/ to the whitelist of dependencies
         sdf = SmartDataframe(sampledata,config = {'llm':llm, "custom_whitelisted_dependencies": ["faker"]})

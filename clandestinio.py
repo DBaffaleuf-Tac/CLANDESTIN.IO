@@ -5,7 +5,7 @@ from pluginDB.mssql import SQLServer
 from assistant.assistant import assistant
 
 # BUILTIN IMPORTS -----------------------------------------------------------------------------------------------
-import sys, getopt, re, string, os.path, argparse, time, datetime
+import sys, getopt, re, string, os.path, argparse, time, datetime, random
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -56,17 +56,19 @@ def printParams(__PROVIDER, __DATABASE, __TABLENAME,__CMAP,__DRYRUN,__PARALLEL,_
 
     return
 
-def pseudonymize(sourcerecords,GDPRcolumnsList,batches,batchsize,settings):
+def pseudonymize(sourcerecords,GDPRcolumnsList,UQCOLS,batches,batchsize,settings):
     Pseudonymizer = assistant()
     pseudonymizedData = pd.DataFrame()
+    UQRecords = sourcerecords[UQCOLS]
 
     for i in tqdm(range(batches)):            
         if not sourcerecords.empty:
             # Select batchsize first rows from the original dataframe
             reduxRecords = sourcerecords[GDPRcolumnsList].head(batchsize)
+            
             # Pseudonymize the selected batchsize rows and return a new dataframe    
             try:
-                reduxGDPRSubsituteData = Pseudonymizer.replaceDPRData(settings['GROQ_API_KEY'],settings["MODEL"],settings["TEMPERATURE"],reduxRecords)
+                reduxGDPRSubsituteData = Pseudonymizer.replaceGDPRData(settings['GROQ_API_KEY'],settings["MODEL"],settings["TEMPERATURE"],reduxRecords)
                 if type(reduxGDPRSubsituteData) is pd.core.frame.DataFrame: 
                     pseudonymizedData = pd.concat([pseudonymizedData,reduxGDPRSubsituteData],ignore_index=False)
                     # Remove pseudonymized rows from the original dataframe by concatenation and duplicates removal
@@ -81,9 +83,11 @@ def pseudonymize(sourcerecords,GDPRcolumnsList,batches,batchsize,settings):
             except Exception as e:
                 print(f'Exception : {e.args}')
                 sys.exit(Errors.FATAL)
-    
-    return pseudonymizedData, reduxRecords
 
+    reduxFinal = pd.concat([UQRecords,reduxRecords],axis=1,ignore_index=False)
+    pseudonymizedFinal = pd.concat([UQRecords,pseudonymizedData],axis=1, ignore_index=False)
+
+    return pseudonymizedFinal, reduxFinal
 
 #  -------------------------------------------------------------------------------------------------------------
 # FUNCTION main()
@@ -115,7 +119,7 @@ def main():
     with open('revision','r') as revision:
         usageBanner = revision.read()
     parser = argparse.ArgumentParser(usage=usageBanner,formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-P", "--provider", type=str, choices=["mssql","my","pg","mg"], required=True, help="name of the provider { 'mssql' | 'my' | 'pg' | 'mg' | 'xlsx' } ")
+    parser.add_argument("-P", "--provider", type=str, choices=["mssql","my","pg","exl"], required=True, help="name of the provider { 'mssql' | 'my' | 'pg' | 'xlsx' } ")
     parser.add_argument("-D", "--databasename", type=ascii, required=True, help="database name if applicable (ignored for excel data)")
     parser.add_argument("-T", "--tablename", type=ascii, required=True, help="full qualified name of the target table / mongo collection / excel tab")
     parser.add_argument("-C", "--cmap", type=ascii, required=False, help="forcing a comma-separated key-value pairs of column_name:type ie 'fname:firstname,lname:lastname'")
@@ -176,7 +180,7 @@ def main():
             return Errors.SUCCESS
         elif __PROVIDER == 'pg': # NOT IMPLEMENTED
             return Errors.SUCCESS
-        elif __PROVIDER == 'mg': # NOT IMPLEMENTED
+        elif __PROVIDER == 'exl': # NOT IMPLEMENTED
             return Errors.SUCCESS
 
         cstr = server.makeConnectionString(odbcdriver,settings['HOST'],__DATABASE,settings['USERNAME'],settings['PASSWD'],settings['INTEGRATED'])
@@ -184,6 +188,22 @@ def main():
             print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
             print("Connection String: ",cstr)
             print('\n')
+
+        # Data Source Sanity checks ------------------------------------------------------------------------------ 
+        if server.executeQuerySingleValue(cstr,server.UniqueConstraintExists(__TABLENAME)) == 0:
+            print(f'No unique constraint or primary key found in table {__TABLENAME} for host {settings['HOST']}')
+            sys.exit(Errors.FATAL)     
+        else:
+            # Find the column(s) used in the first identified unique constraint 
+            # findUniqueColumns returns one tuple / 2 columns in the form (index_id,comma-separated-columns-list)
+            # Example : [(2, 'Id,CreationDate')]
+            # We only need the list of columns included in the first unique constraint we encounter thus [0][1]
+            # And finally transforming into list
+            UQCOLS = server.executeQuery(cstr,server.findUniqueColumns(__TABLENAME))[0][1].upper().split(',')
+            if __VERBOSE == 1:
+                print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
+                print(f"At least one unique constraint has been found on {__TABLENAME} on columns ({UQCOLS})")
+                print('\n')            
 
         # Load data ----------------------------------------------------------------------------------
         sourcerecords = server.executeQueryToPD(cstr,server.initSQLStr(__TABLENAME))
@@ -195,8 +215,8 @@ def main():
         sourcerecords.columns = (sourcerecords.columns.str.strip().str.upper()
               .str.replace(' ', '_', regex=True)
               .str.replace('(', '', regex=True)
-              .str.replace(')', '', regex=True))       
-        
+              .str.replace(')', '', regex=True))  
+                
         # 3) Convert any object dtype in String dtype and remove any non ASCII character
         for col in sourcerecords.keys():   
             if sourcerecords.dtypes[col] == "object":
@@ -227,10 +247,13 @@ def main():
         # IA -> Local pseudonymization ---------------------------------------------------------------        
         batchsize=int(settings["BATCHSIZE"])
         if batchsize == 0:
-            print('BATCHSIZE CANNOT BE ZERO, CHANGE THE VALUE IN .ENV FILE !!! ')
+            print('BATCHSIZE CANNOT BE ZERO, CHANGE THE VALUE IN .ENV FILE !!!')
             sys.exit(Errors.FATAL)
         else:
-            batches = int(len(sourcerecords)/batchsize) + 1
+            if batchsize <= len(sourcerecords):
+                batches=1
+            else:    
+                batches=int(len(sourcerecords)/batchsize) + 1
                
         # Pseudonymization Loop of batchsize rows
         print(f"-> Proceeding {len(sourcerecords)} rows in {batches} batches of {batchsize}  rows... ")
@@ -238,7 +261,8 @@ def main():
         # single / multi threaded depending on --parallel
         # --parallel not used at this point
         # SINGLE - THREADED
-        pseudonymizedData, reduxRecords = pseudonymize(sourcerecords,GDPRcolumnsList,batches,batchsize,settings)
+        
+        pseudonymizedData, reduxRecords = pseudonymize(sourcerecords,GDPRcolumnsList,UQCOLS,batches,batchsize,settings)
 
         if __VERBOSE == 1:
             print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
@@ -247,10 +271,24 @@ def main():
             print('\n')
         
         # Import local pseudonymized -----------------------------------------------------------------
+        # Create physical worktable in the database using original column names  
+        OWNER=__TABLENAME.split('.')[0]       
+        TBL=__TABLENAME.split('.')[1]
+        WTNAME=f"PSEUDO_{TBL}_{str(random.randint(0,99999))}"
+        if not server.createWorkTable(cstr,server.createWorkTableSQL(OWNER,WTNAME,__TABLENAME)):
+            print(f"Error during worktable creation, aborting...")
+            sys.exit(Errors.FATAL)
+                
+        # Import data from pseudonymizedData DF
+        server.loadWorkTable(cstr,OWNER,WTNAME,pseudonymizedData)
 
         # Final substitution -------------------------------------------------------------------------
 
         # Cleaning -----------------------------------------------------------------------------------
+        # Drop remaining DFs
+        # Drop Worktable
+        server.dropWorkTable(cstr,OWNER,WTNAME) # <-- does not work if the table not empty grrrr alchemy !!!
+
 
     end=time.time()
     elapsed=(end-start)

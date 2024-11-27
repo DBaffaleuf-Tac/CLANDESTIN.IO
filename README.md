@@ -1,4 +1,10 @@
-![image](https://github.com/user-attachments/assets/ec59e1fb-5ce8-4b81-93fd-22c2cc5514e7)
+  ____ _        _    _   _ ____  _____ ____ _____ ___ _   _       ___ ___
+ / ___| |      / \  | \ | |  _ \| ____/ ___|_   _|_ _| \ | |     |_ _/ _ \
+| |   | |     / _ \ |  \| | | | |  _| \___ \ | |  | ||  \| |      | | | | |
+| |___| |___ / ___ \| |\  | |_| | |___ ___) || |  | || |\  |  _   | | |_| |
+ \____|_____/_/   \_\_| \_|____/|_____|____/ |_| |___|_| \_| (_) |___\___/
+
+![image](https://github.com/user-attachments/assets/7494a6b5-e1b1-4852-9c1d-1dc08b9e8f32)
 
               ~ GDPR data pseudoniymizer based on Gen AI ~ 
                               for SQL Server

@@ -5,7 +5,7 @@ from pluginDB.mssql import SQLServer
 from assistant.assistant import assistant
 
 # BUILTIN IMPORTS -----------------------------------------------------------------------------------------------
-import sys, getopt, re, string, os.path, argparse, time, datetime, random
+import sys, getopt, re, string, os.path, argparse, time, datetime, random, gc
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -45,7 +45,7 @@ def checkParams(__PROVIDER, __DATABASE, __TABLENAME,__CMAP,__DRYRUN,__VERBOSE):
 #                       | .__/|_|  |_|_| |_|\__|_|   \__,_|_|  \__,_|_| |_| |_|___/
 #                       |_|
 
-def printParams(__PROVIDER, __DATABASE, __TABLENAME,__CMAP,__DRYRUN,__PARALLEL,__VERBOSE):
+def printParams(__PROVIDER, __DATABASE, __TABLENAME,__CMAP,__DRYRUN,__PARALLEL,__VERBOSE,__FORCE):
     print (f'__PROVIDER : {__PROVIDER}')
     print (f'__DATABASE : {__DATABASE}')
     print (f'__TABLENAME : {__TABLENAME}')
@@ -53,6 +53,7 @@ def printParams(__PROVIDER, __DATABASE, __TABLENAME,__CMAP,__DRYRUN,__PARALLEL,_
     print (f'__DRYRUN : {__DRYRUN}')
     print (f'__PARALLEL : {__PARALLEL}')
     print (f'__VERBOSE : {__VERBOSE}')
+    print (f'__FORCE : {__FORCE}')
 
     return
 
@@ -104,8 +105,10 @@ def main():
     global __TABLENAME
     global __CMAP
     global __DRYRUN 
+    global __COPYTABLE 
     global __VERBOSE
     global __PARALLEL
+    global __FORCE 
 
     __PROVIDER=""
     __DATABASE=""
@@ -123,12 +126,16 @@ def main():
     parser.add_argument("-D", "--databasename", type=ascii, required=True, help="database name if applicable (ignored for excel data)")
     parser.add_argument("-T", "--tablename", type=ascii, required=True, help="full qualified name of the target table / mongo collection / excel tab")
     parser.add_argument("-C", "--cmap", type=ascii, required=False, help="forcing a comma-separated key-value pairs of column_name:type ie 'fname:firstname,lname:lastname'")
+    parser.add_argument("-G", "--copytable", dest="copytable", action='store_true', required=False, help="creates a copy of the table and substitues data only in the copy, not the original table")
     parser.add_argument("-R", "--dryrun", dest='run', action='store_true', required=False, help="Presents the results but does not actually subsitute the data")
     parser.add_argument("-V", "--verbose", dest='verbose', action='store_true', required=False, help="Verbose mode, False by default")
     parser.add_argument("-Y", "--parallel", dest='parallel', action='store_true', required=False, help="Parallel mode, False by default")
+    parser.add_argument("-F", "--force", dest='force', action='store_true', required=False, help="Force non dry run mode to bypass warning message")
     parser.set_defaults(run=False)
+    parser.set_defaults(copytable=False)
     parser.set_defaults(verbose=False)
-    parser.set_defaults(parallel=False)
+    parser.set_defaults(parallel=False) # NO-OP as of 1.0
+    parser.set_defaults(force=False)
 
     args = parser.parse_args()
     config = vars(args)
@@ -136,21 +143,24 @@ def main():
     __DATABASE=config["databasename"].replace("'","")
     __TABLENAME=config["tablename"].replace("'","")
     __CMAP=config["cmap"]
+    __COPYTABLE=config["copytable"]    
     __DRYRUN=config["run"]
     __VERBOSE=config["verbose"]
     __PARALLEL=config["parallel"]
+    __FORCE=config["force"]    
 
 
     if __VERBOSE == 1:
         print ('--> ENTERING VERBOSE MODE ----------------------------------------------------------\n')
 
     # ARGV sanity checks -------------------------------------------------------------------------
-    if not checkParams(__PROVIDER, __DATABASE, __TABLENAME, __CMAP,__DRYRUN, __VERBOSE):
-        sys.exit(Errors.FATAL)
+    if __FORCE == False:
+        if not checkParams(__PROVIDER, __DATABASE, __TABLENAME, __CMAP,__DRYRUN, __VERBOSE):
+            sys.exit(Errors.FATAL)
 
     if __VERBOSE == 1:
         print ('--> VERBOSE : clandestinio -> printParams() -------------------------------------------------------')
-        printParams(__PROVIDER, __DATABASE, __TABLENAME, __CMAP,__DRYRUN, __PARALLEL,__VERBOSE)
+        printParams(__PROVIDER, __DATABASE, __TABLENAME, __CMAP,__DRYRUN, __PARALLEL,__VERBOSE,__FORCE)
         print('\n')
 
     # Loading environment  -----------------------------------------------------------------------
@@ -212,6 +222,7 @@ def main():
         # 1) Adding a hash value for UNIQUENESS
         sourcerecords['clandestinioid'] = sourcerecords.apply(lambda x: hash(tuple(x)), axis = 1)
         # 2) Normalizing column names 
+        originalColumns = sourcerecords.columns
         sourcerecords.columns = (sourcerecords.columns.str.strip().str.upper()
               .str.replace(' ', '_', regex=True)
               .str.replace('(', '', regex=True)
@@ -264,31 +275,56 @@ def main():
         
         pseudonymizedData, reduxRecords = pseudonymize(sourcerecords,GDPRcolumnsList,UQCOLS,batches,batchsize,settings)
 
-        if __VERBOSE == 1:
-            print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
-            print(f"ORIGINAL DATA : \n {reduxRecords}")
+        if __VERBOSE == 1 or __DRYRUN == True:
+            if __VERBOSE == 1:
+                print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
+            elif __DRYRUN == True:
+                print ('--> DRYRUN : clandestinio -> main() -------------------------------------------------------')
+            
+            print(f"ORIGINAL DATA : \n {sourcerecords}")
             print(f"PSEUDOMYNIZED DATA : \n {pseudonymizedData}")
             print('\n')
         
-        # Import local pseudonymized -----------------------------------------------------------------
-        # Create physical worktable in the database using original column names  
-        OWNER=__TABLENAME.split('.')[0]       
-        TBL=__TABLENAME.split('.')[1]
-        WTNAME=f"PSEUDO_{TBL}_{str(random.randint(0,99999))}"
-        if not server.createWorkTable(cstr,server.createWorkTableSQL(OWNER,WTNAME,__TABLENAME)):
-            print(f"Error during worktable creation, aborting...")
-            sys.exit(Errors.FATAL)
-                
-        # Import data from pseudonymizedData DF
-        server.loadWorkTable(cstr,OWNER,WTNAME,pseudonymizedData)
+        if __DRYRUN == False:
+            # Rename DF columns with original ones (not uppercase)
+            # To deal with case sensitive collation on the server side
+            for PSC in pseudonymizedData.columns:
+                for OC in originalColumns:
+                    if OC.upper() == PSC.upper():
+                        pseudonymizedData.rename(columns={f'{PSC}':f'{OC}'})
 
-        # Final substitution -------------------------------------------------------------------------
+            # Import local pseudonymized -----------------------------------------------------------------
+            OWNER=__TABLENAME.split('.')[0]       
+            TBL=__TABLENAME.split('.')[1]
+            WTNAME=f"PSEUDO_{TBL}_{str(random.randint(0,99999))}"
+                        
+            if not server.loadWorkTable(cstr,OWNER,WTNAME,pseudonymizedData):
+                print(f"Error during worktable loading, aborting...") 
+                sys.exit(Errors.FATAL)
 
-        # Cleaning -----------------------------------------------------------------------------------
-        # Drop remaining DFs
-        # Drop Worktable
-        server.dropWorkTable(cstr,OWNER,WTNAME) # <-- does not work if the table not empty grrrr alchemy !!!
+            # Eventual source copy ------------------------------------------------------------------------
+            if __COPYTABLE == True:
+                # Copy the source table before substitution
+                COPYTABLENAME=f"{OWNER}.COPY_{TBL}_{str(random.randint(0,99999))}"
+                print(f"Creating a copy of table {__TABLENAME} into {COPYTABLENAME}...")                 
+                COPYTABLENAMESQL=server.copySourceTableSQL(__TABLENAME,COPYTABLENAME)
+                if not server.copySourceTable(cstr,COPYTABLENAMESQL):
+                    print(f"Error during source table copy, aborting...") 
+                    sys.exit(Errors.FATAL)       
+                else:
+                    __TABLENAME=COPYTABLENAME
+            
+            # Final substitution -------------------------------------------------------------------------
+            # Based on update with JOIN on UNIQUE KEY identified as UQCOLS
+            # Using BATCHSIZE to group commits and avoid xact log overflow
 
+
+            # Cleaning -----------------------------------------------------------------------------------
+            # Drop remaining DFs
+            # Drop Worktable
+            if not server.dropWorkTable(cstr,OWNER,WTNAME): # <-- does not work if the table not empty grrrr alchemy !!!
+                print(f"Error during dropping worktable, aborting...")
+                sys.exit(Errors.FATAL)
 
     end=time.time()
     elapsed=(end-start)

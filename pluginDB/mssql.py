@@ -2,6 +2,7 @@ import sys
 import pyodbc, pandas as pd
 import sqlalchemy as sa
 from sqlalchemy import Table, MetaData
+from sqlalchemy.ext.declarative import declarative_base
 from lib.errors import Errors
 
 
@@ -53,9 +54,13 @@ class SQLServer():
 		group by i.index_id ; """
         return UNIQUECOLUMN
 
-    def createWorkTableSQL(self,OWNER,WTNAME,TABLENAME):
-        CREATETABLESQL=f"""SELECT * INTO [{OWNER}].[{WTNAME}] FROM {TABLENAME} WHERE 1=2 ;"""
+    def createWorkTableSQL(self,WTNAME,TABLENAME):
+        CREATETABLESQL=f"""SELECT * INTO [{WTNAME}] FROM {TABLENAME} WHERE 1=2 ;"""
         return CREATETABLESQL
+
+    def copySourceTableSQL(self,SOURCETABLE,COPYTABLE):
+        COPYSOURCETABLESQL=f""" SELECT * INTO {COPYTABLE} FROM {SOURCETABLE} ;"""
+        return COPYSOURCETABLESQL
 
     def __del__(self):
        return
@@ -135,20 +140,34 @@ class SQLServer():
         try:
             connection_url = sa.engine.URL.create("mssql+pyodbc", query={"odbc_connect": cstr})
             engine = sa.create_engine(connection_url)
-            DF.to_sql(name=OWNER+'.'+WTNAME, con=engine)
+            DF.to_sql(name=WTNAME, con=engine, if_exists='replace')
             return True
 
         except Exception as e:
             print(e.__class__,e.args)
-            sys.exit(Errors.FATAL)
+            return False
 
-    def dropWorkTable(self,cstr,OWNER,WTNAME):
+    def copySourceTable(self,cstr,query):
         try:
             connection_url = sa.engine.URL.create("mssql+pyodbc", query={"odbc_connect": cstr})
-            engine = sa.create_engine(connection_url)     
-            TBL = Table(WTNAME, MetaData(), schema=OWNER, autoload_with=engine)
-            TBL.drop(engine, checkfirst=False)     
+            engine = sa.create_engine(connection_url)
+            with engine.connect() as conn: 
+                res = conn.execute(sa.text(query))
+                conn.commit()
+            return True
 
         except Exception as e:
             print(e.__class__,e.args)
-            sys.exit(Errors.FATAL)
+            return False
+               
+    def dropWorkTable(self,cstr,OWNER,WTNAME):
+        try:
+            connection_url = sa.engine.URL.create("mssql+pyodbc", query={"odbc_connect": cstr})
+            engine = sa.create_engine(connection_url)
+            TBL = Table(WTNAME, MetaData(), autoload_with=engine)
+            TBL.drop(engine, checkfirst=False)
+            return True 
+
+        except Exception as e:
+            print(e.__class__,e.args)
+            return False

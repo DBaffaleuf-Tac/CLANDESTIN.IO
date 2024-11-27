@@ -20,8 +20,10 @@
 # @(#)    -D / --database   : database name 
 # @(#)    -T / --tablename  : full qualified name of the target table /  excel tab 
 # @(#)    -C / --columnsmap : forcing a comma-separated key-value pairs of column_name:type ie 'fname:firstname,lname:lastname' 
+# @(#)    -G / --copytable  : creates a copy of the table and substitues data only in the copy, not the original table 
 # @(#)    -R / --dryrun     : == True by default, presents the results but does not actually subsitute the data
 # @(#)    -V / --verbose    : Verbose mode, false by default
+# @(#)    -F / --force      : Force non dry run mode to bypass warning message
 # @(#)    
 # @(#)   Example : python clandestinio --provider='mssql' --database='stackoverflow' --tablename='dbo.Users'
 # @(#) -------------------------------------------------------------------------------------------------- 

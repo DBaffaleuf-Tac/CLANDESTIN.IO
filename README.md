@@ -30,13 +30,13 @@ For now, Clandestinio is only compatible with SQL Server. There are plans to ext
 
 * Install the python modules mentionned in the prerequisites depending on your environment (conda, pip, etc...)
   ```shell
-    cd
+    cd CLANDESTIN.IO-main
     pip install -r requirements.txt
   ```
 * OR
 
   ```shell
-    cd
+    cd CLANDESTIN.IO-main
     conda install --yes --file requirements.txt
   ```
 

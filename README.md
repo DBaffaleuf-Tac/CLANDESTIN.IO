@@ -8,7 +8,7 @@ Pseudonymizing can be irreversible to your data. The location of the data to be 
 Bottom-line : 
 * **NEVER USE THIS TOOL ON YOUR PRODUCTION DATA**  
 * **ALWAYS MAKE BACKUPS BEFORE YOU CHANGE ANYTHING ON YOUR DATA**
-* **YOU ARE RESPONSIBLE FOR MANIPULATING YOUR DATA** 
+* **YOU ARE ULTIMATELY RESPONSIBLE FOR MANIPULATING YOUR DATA** 
 
 # Prerequisites
 - Python3 and the following modules: 

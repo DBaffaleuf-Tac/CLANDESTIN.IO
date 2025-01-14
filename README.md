@@ -33,7 +33,7 @@ For now, Clandestinio is only compatible with SQL Server. There are plans to ext
     cd
     pip install -r requirements.txt
   ```
-OR
+* OR
 
   ```shell
     cd

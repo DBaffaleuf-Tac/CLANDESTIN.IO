@@ -25,6 +25,20 @@ For now, Clandestinio is only compatible with SQL Server. There are plans to ext
  
 # Installation
 * Extract the repository to your local workstation, laptop using git:
+  ```shell
+  git clone https://github.com/DBaffaleuf-Tac/CLANDESTIN.IO.git
+
+* Install the python modules mentionned in the prerequisites depending on your environment (conda, pip, etc...)
+  ```shell
+    cd
+    pip install -r requirements.txt
+  ```
+OR
+
+  ```shell
+    cd
+    conda install --yes --file requirements.txt
+  ```
 
 # Usage
 

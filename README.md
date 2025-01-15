@@ -355,3 +355,8 @@ OR
 
 
 # Stats
+## Adjusting BATCHSIZE according to your working set :
+Depending on the amount of data to pseudonymize, the value of batchsize has a tremendous effect on the overall performance.
+Here are some stats of working sets from 10K rows to 1M rows, using various batchsizes from n batches of 10K rows to 1 batch of the full working set size :
+![image](https://github.com/user-attachments/assets/d303d83e-f25e-4d4b-8558-ec96614257c8)
+We can see that the best elasped performance is reached when the batchsize is equivalent to the size of the working set, however, it has also a huge effect on the amount of transaction log size needed to accomodate for such a transaction. It is always best advised to run high volume updates in small to medium size batches to avoid filling the transaction log. As a reference, the latest test updating 1M rows using 1 batch of 1M update takes 3.4Gb of transaction log). 

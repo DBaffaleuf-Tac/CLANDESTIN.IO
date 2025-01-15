@@ -360,10 +360,10 @@ Depending on the amount of data to pseudonymize, the value of batchsize has a tr
 Here are some stats of working sets from 10K rows to 1M rows, using various batchsizes from n batches of 10K rows to 1 batch of the full working set size :
 ![image](https://github.com/user-attachments/assets/d303d83e-f25e-4d4b-8558-ec96614257c8)
 First serie on x-axis is the size of the working set from 10K rows (light blue) to 1M rows (dark blue)
-In each serie, multiple batchsizes used ranging from 10K to the size of the full working set, in % of the workig set. 
+In each serie, multiple batchsizes used ranging from 10K to the size of the full working set, in %  
 
 We can see that the best elasped performance is reached when the batchsize is equivalent to the size of the working set (100%), however, it has also a huge effect on the amount of transaction log size needed to accomodate for such a transaction. It is always best advised to run high volume updates in small to medium size batches to avoid filling the transaction log. As a reference, the latest test updating 1M rows using 1 batch of 1M update takes 3.4Gb of transaction log). 
-Bottom-line, don't necessarily use 100% of the working set, find the right balance between performance and transaction log size.  
+Bottom-line, don't necessarily use BATCHSIZE equivalent to 100% of the working set, find the right balance between performance and transaction log size.  
 
 ## Groq API and model limitations 
 Also we can note that with multiple batches comes multiple requests to the Groq API. Sending more than 200K token per day with the llama-3.1-70b-versatile model will raise a rate error such as : 

@@ -134,7 +134,7 @@ OR
   Clandestinio has completed in 23.18284249305725 seconds
   ```
 
-*  Silent mode (--force):
+* Silent mode (--force):
   ```shell
   py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --force 
   Clandestinio has started at 2025-01-15 09:05:55.981625

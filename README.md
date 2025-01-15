@@ -144,21 +144,59 @@ OR
   100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,  2.65it/s]
   Clandestinio has completed in 8.408372402191162 seconds
   ```
+* Dryrun mode (--dryun):
+  ```shell
+  py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --dryrun        
+  Clandestinio has started in DRY RUN mode at 2025-01-15 09:08:12.659155
+  WARNING : Only examples of substituted data will be presented
+  -> Pseudonimyze : proceeding 10000 rows in 2 batches of 10000  rows... 
+  100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:05<00:00,  2.84s/it] 
+  --> DRYRUN : clandestinio -> main() -------------------------------------------------------
+  TIMER :T + 6.739 seconds
+  ORIGINAL DATA :
+            ID                                            ABOUTME AGE            CREATIONDATE  ...   VIEWS                         WEBSITEURL ACCOUNTID       CLANDESTINIOID
+  0         1  <p>Hi, I'm not really a person.</p>\n\n<p>I'm ...     2008-07-31 00:00:00.000  ...     649     http://meta.stackexchange.com/        -1     7169893833049206
+  1         2  <p><a href="http://www.codinghorror.com/blog/a...     2008-07-31 14:22:31.287  ...  408587  http://www.codinghorror.com/blog/         1  -126767350700192332
+  2         3  <p>Developer on the Stack Overflow team.  Find...     2008-07-31 14:22:31.287  ...   23966           http://stackoverflow.com         2  -275375620745238106
+  3         4  <p><a href="http://blog.stackoverflow.com/2009...     2008-07-31 14:22:31.287  ...   24396             http://jarroddixon.com         3 -1596034666079574500
+  4         5  <p>I am:</p>\n\n<ul>\n<li>the co-founder and C...     2008-07-31 14:22:31.317  ...   73755     http://www.joelonsoftware.com/         4  3733231243798771846
+  ...     ...                                                ...  ..                     ...  ...     ...                                ...       ...                  
+  ...
+  9995   9996                                                        2008-09-19 21:27:54.243  ...      83                                        10277  7381926564352699852
+  9996   9997                                                        2008-09-19 21:32:26.587  ...      11                                       561187  4936372891790958402
+  9997   9998  <p>I'm a software engineer based in Guadalajar...     2008-09-19 21:36:27.763  ...     713                http://pablasso.com     10278  3907909480035912445
+  9998   9999  <p>I am a software engineer in Athens, Greece....     2008-09-19 21:39:34.043  ...     530                                        10279  2219898713749716072
+  9999  10000                                                        2008-09-19 21:45:50.410  ...      58                                        10280  -581975977735534489
+  
+  [10000 rows x 15 columns]
+  PSEUDOMYNIZED DATA :
+            ID                                            ABOUTME  ...                                   LOCATION                    WEBSITEURL
+  0         1  Head sign note voice forget firm imagine. List...  ...                   Marisachester, Guatemala              https://king.com
+  1         2  Your even should range wear affect special. Wr...  ...                      West Heather, Reunion          https://mccarthy.com
+  2         3  Feeling around like rate team drive. Note majo...  ...                West Lauren, Czech Republic         https://macdonald.org
+  3         4  Game particular new history. By crime alone ed...  ...                        Millerton, Djibouti        https://cross-rose.org
+  4         5  White parent maybe learn house account size. O...  ...                          Williamton, Niger              https://pope.net
+  ...     ...                                                ...  ...                                        ...                           ...
+  9995   9996  Fight consumer discussion I. Because science m...  ...                       Ryanchester, Andorra         https://middleton.com
+  9996   9997  Expect few cover star data yeah tough former. ...  ...                            East Lisa, Mali    https://burnett-massey.com
+  9997   9998  Run respond occur loss. Friend hit cultural mi...  ...                           Port Jacob, Guam  https://crawford-jenkins.com
+  9998   9999  Different central first decade common probably...  ...          Hughesfurt, Sao Tome and Principe          https://williams.com
+  9999  10000  Meet where site lose big someone. Prepare citi...  ...  Jonathanfort, French Southern Territories           https://bullock.org
+  
+  [10000 rows x 7 columns]
+   
+  Clandestinio has completed in 6.762551307678223 seconds
+  ```
 
-
-*  Dryrun mode (--dryun):
+* Copytable mode (--copytable):
   ```shell
   ```
 
-*  Copytable mode (--copytable):
+* Cmap mode (-cmap):
   ```shell
   ```
 
-*  Cmap mode (-cmap):
-  ```shell
-  ```
-
-*  Verbose mode (-verbose):
+* Verbose mode (-verbose):
   ```shell
   ```
 

@@ -121,7 +121,7 @@ OR
 # Examples
 * Minimal options :
   ```shell
-  py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small"
+  $ py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small"
   Clandestinio has started at 2025-01-15 08:57:33.876401
   WARNING : Data will be substituted
   ---------------- !!! WARNING - DRY RUN DEACTIVATED !!! ----------------
@@ -136,7 +136,7 @@ OR
 
 * Silent mode (--force):
   ```shell
-  py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --force 
+  $ py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --force 
   Clandestinio has started at 2025-01-15 09:05:55.981625
   WARNING : Data will be substituted
   -> Pseudonimyze : proceeding 10000 rows in 2 batches of 10000  rows... 
@@ -146,7 +146,7 @@ OR
   ```
 * Dryrun mode (--dryun):
   ```shell
-  py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --dryrun        
+  $ py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --dryrun        
   Clandestinio has started in DRY RUN mode at 2025-01-15 09:08:12.659155
   WARNING : Only examples of substituted data will be presented
   -> Pseudonimyze : proceeding 10000 rows in 2 batches of 10000  rows... 
@@ -190,7 +190,7 @@ OR
 
 * Copytable mode (--copytable):
   ```shell
-  py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --copytable --force
+  $ py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --copytable --force
   Clandestinio has started at 2025-01-15 09:10:56.195622
   WARNING : Data will be substituted
   -> Pseudonimyze : proceeding 10000 rows in 2 batches of 10000  rows... 
@@ -201,12 +201,29 @@ OR
 
 * Cmap mode (-cmap):
   ```shell
-  
+  py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small"  --force --cmap='DisplayName,Location' 
+  Clandestinio has started at 2025-01-15 19:07:22.570647
+  WARNING : Data will be substituted
+  -> Pseudonimyze : proceeding 10000 rows in 2 batches of 10000  rows... 
+    0%|                                                                                                                                                                                                                                                 | 0/2 [00:00<?, ?it/s]         DISPLAYNAME                            LOCATION
+  0      Lauren Hooper                East Charles, Panama
+  1        Dustin Ryan               Whitakerport, Germany
+  2     Gabriel Morgan            East Brianfurt, Cameroon
+  3       Jennifer Lee         North Kimland, Saint Martin
+  4  Courtney Thompson  Harrisonmouth, Trinidad and Tobago
+  5        Linda Grant              West Loriland, Lesotho
+  6   Sandra Frederick               North Joseph, Tunisia
+  7          Kent Bell                 Port Bobby, Morocco
+  8       David Nguyen                 South James, Turkey
+  9      Isaac Morales         Moniquetown, Norfolk Island
+  100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:02<00:00,  1.26s/it] 
+  100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,  3.11it/s]
+  Clandestinio has completed in 5.395118713378906 seconds
   ```
 
 * Verbose mode (-verbose):
   ```shell
-  py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --copytable --force --verbose
+  $ py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --copytable --force --verbose
   Clandestinio has started at 2025-01-15 09:13:48.422752
   WARNING : Data will be substituted
   --> ENTERING VERBOSE MODE ----------------------------------------------------------

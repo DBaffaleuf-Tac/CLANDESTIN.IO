@@ -362,7 +362,7 @@ Here are some stats of working sets from 10K rows to 1M rows, using various batc
 First serie on x-axis is the size of the working set from 10K rows (light blue) to 1M rows (dark blue)
 In each serie, multiple batchsizes used ranging from 10K to the size of the full working set, in %  
 
-We can see that the best elasped performance is reached when the batchsize is equivalent to the size of the working set (100%), however, it has also a huge effect on the amount of transaction log size needed to accomodate for such a transaction. It is always best advised to run high volume updates in small to medium size batches to avoid filling the transaction log. As a reference, the latest test updating 1M rows using 1 batch of 1M update takes 3.4Gb of transaction log). 
+We can see that the best elasped performance is reached when the batchsize is equivalent to the size of the working set (100%), however, it has also a huge effect on the amount of transaction log size needed to accomodate for such a transaction. It is always best advised to run high volume updates in small to medium size batches to avoid filling the transaction log. As a reference, the latest test updating 1M rows using 1 batch of 1M update takes 3.4Gb of transaction log. 
 Bottom-line, don't necessarily use BATCHSIZE equivalent to 100% of the working set, find the right balance between performance and transaction log size.  
 
 ## Groq API and model limitations 
@@ -377,6 +377,6 @@ When running multiple batches, we can see a slight variation in the time needed 
 * 500K rows in 51 x 10K batches
 * 1M rows in 101 x 10K batches
 
-It seems the number of seconds per iteration only fluctuates between 7 and 21 seconds depending on the traffic on the API endpoints, which makes the performance quite consistent across batches :
+It seems the number of seconds per iteration only fluctuates between 6 and 21 seconds depending on the traffic on the API endpoints, which makes the performance quite consistent across batches :
 ![image](https://github.com/user-attachments/assets/9638d9cb-488a-4a77-a3ea-dfd82a42d86c)
   

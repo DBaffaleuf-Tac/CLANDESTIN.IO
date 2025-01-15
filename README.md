@@ -114,7 +114,7 @@ OR
 * --tablename : full qualified name means schema.object notation, see examples below
 * --cmap : when not set, Clandestinio runs in discovery mode and leverages generative AI to detect which column can be considered personnal data. When set, forces a list of columns.
 * --copytable : useful to test results before implementing them. When set, a full copy of the base table is made and prefixed COPY_% and only data in this table will be substituted
-* --dryrun : when not set, in interactive mode a warning banner asks for confirmation before moving on with substitution. See examples below.
+* --dryrun : when not set, in interactive mode a warning banner asks for confirmation before moving on with substitution. when set, only presents at the console an example of original and pseudonymized data.   See examples below.
 * --verbose : prints intermediary results, specifically data samples before and after substitution, columns identification, and timing.
 * --force : bypass the warning message in non dryrun mode, to allow users to run in silent / batch mode.
     
@@ -190,14 +190,157 @@ OR
 
 * Copytable mode (--copytable):
   ```shell
+  py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --copytable --force
+  Clandestinio has started at 2025-01-15 09:10:56.195622
+  WARNING : Data will be substituted
+  -> Pseudonimyze : proceeding 10000 rows in 2 batches of 10000  rows... 
+  100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:07<00:00,  3.66s/it] 
+  100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,  2.30it/s]
+  Clandestinio has completed in 9.927576780319214 seconds
   ```
 
 * Cmap mode (-cmap):
   ```shell
+  
   ```
 
 * Verbose mode (-verbose):
   ```shell
+  py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --copytable --force --verbose
+  Clandestinio has started at 2025-01-15 09:13:48.422752
+  WARNING : Data will be substituted
+  --> ENTERING VERBOSE MODE ----------------------------------------------------------
+  
+  --> VERBOSE : clandestinio -> printParams() -------------------------------------------------------
+  __PROVIDER : mssql
+  __DATABASE : stackoverflow
+  __TABLENAME : dbo.Users_small
+  __CMAP : None
+  __DRYRUN : False
+  __PARALLEL : False
+  __VERBOSE : True
+  __FORCE : True
+  
+  
+  --> VERBOSE : clandestinio -> main() -------------------------------------------------------
+  DOTENV VARIABLES:  OrderedDict({'GROQ_API_KEY': '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', 'MODEL': 'llama-3.1-70b-versatile', 'TEMPERATURE': '0.0', 'HOST': 'DAVID-PC', 'PORT': '1433', 'USERNAME': 'dbaff-sql', 'PASSWD': 'capdata', 'INTEGRATED': '0', 'FRAC': '0.1', 'BATCHSIZE': '10000'})
+  
+  
+  --> VERBOSE : clandestinio -> main() -------------------------------------------------------
+  ODBC Driver Used:  ODBC Driver 17 for SQL Server
+  
+  
+  --> VERBOSE : clandestinio -> main() -------------------------------------------------------
+  TIMER :T + 0.0 seconds
+  Connection String:  DRIVER=ODBC Driver 17 for SQL Server;SERVER=DAVID-PC;DATABASE=stackoverflow;UID=dbaff-sql;PWD=capdata;CHARSET=UTF8
+  
+  
+  --> VERBOSE : clandestinio -> main() -------------------------------------------------------
+  TIMER :T + 0.08 seconds
+  At least one unique constraint has been found on dbo.Users_small on columns (['ID'])
+  
+  
+  --> VERBOSE : clandestinio -> main() -------------------------------------------------------
+  TIMER :T + 0.224 seconds
+  10.0 % sampling top 10 rows for GDPR data identification:          ID                                            ABOUTME AGE            CREATIONDATE  ... VIEWS                         WEBSITEURL ACCOUNTID       CLANDESTINIOID
+  9953  9954                           PhD Candidate, Developer     2008-09-19 19:43:51.717  ...   378                 http://www.from.bz     10235  5069681592649123493
+  3850  3851  Scientist and software developper for a scient...     2008-09-11 11:33:00.943  ...   217           http://www.lri.fr/~semet      3940   585918664376754270
+  4962  4963  Software Engineering Research Scientist for a ...     2008-09-15 14:50:50.573  ...   195             https://lolindrath.com      5081  2486981336065714974
+  3886  3887  Software engineer focusing mainly on parallel,...     2008-09-11 13:54:15.657  ...    87        http://james.thevasaks.net/      3977 -4901959274289050828
+  5437  5438  I'm a mexican developer who owns a small websh...     2008-09-15 17:35:21.757  ...    51             http://joaquin.axai.mx      5575 -4817111646987662867
+  8517  8518                                                        2008-09-17 13:30:30.750  ...    20                                         8754  9014658398988800973
+  2041  2042                                                        2008-08-25 17:46:55.040  ...    66                                         2089  5997801950785661366
+  1989  1990  <p>I'm a contract Mac &amp; iOS developer work...     2008-08-25 07:54:29.033  ...   967         http://benedictcohen.co.uk      2037  3275388604982469404
+  1933  1934  <p>I am a .NET software engineer working in Ir...     2008-08-24 17:15:55.357  ...   328  http://secretdeveloper.github.io/      1978 -1429516346746781969
+  9984  9985                              <p>F# developer</p>\n     2008-09-19 20:56:26.097  ...  7482   http://lorgonblog.wordpress.com/     10266 -5243816490475443100
+  
+  [10 rows x 15 columns]
+  
+  
+  --> VERBOSE : clandestinio -> main() -------------------------------------------------------
+  TIMER :T + 0.846 seconds
+  Identified Columns for the dataset are : ['ABOUTME', 'AGE', 'DISPLAYNAME', 'EMAILHASH', 'LOCATION', 'WEBSITEURL']
+  
+  
+  -> Pseudonimyze : proceeding 10000 rows in 2 batches of 10000  rows...
+  100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:05<00:00,  2.80s/it] 
+  --> VERBOSE : clandestinio -> main() -------------------------------------------------------
+  TIMER :T + 6.475 seconds
+  ORIGINAL DATA : 
+            ID                                            ABOUTME AGE            CREATIONDATE  ...   VIEWS                         WEBSITEURL ACCOUNTID       CLANDESTINIOID
+  0         1  <p>Hi, I'm not really a person.</p>\n\n<p>I'm ...     2008-07-31 00:00:00.000  ...     649     http://meta.stackexchange.com/        -1   351799999803420987
+  1         2  <p><a href="http://www.codinghorror.com/blog/a...     2008-07-31 14:22:31.287  ...  408587  http://www.codinghorror.com/blog/         1 -3341815431060270276
+  2         3  <p>Developer on the Stack Overflow team.  Find...     2008-07-31 14:22:31.287  ...   23966           http://stackoverflow.com         2  7169479428293242071
+  3         4  <p><a href="http://blog.stackoverflow.com/2009...     2008-07-31 14:22:31.287  ...   24396             http://jarroddixon.com         3    18047808857711048
+  4         5  <p>I am:</p>\n\n<ul>\n<li>the co-founder and C...     2008-07-31 14:22:31.317  ...   73755     http://www.joelonsoftware.com/         4   112447770132852244
+  ...     ...                                                ...  ..                     ...  ...     ...                                ...       ...                  
+  ...
+  9995   9996                                                        2008-09-19 21:27:54.243  ...      83                                        10277 -3307792509388308692
+  9996   9997                                                        2008-09-19 21:32:26.587  ...      11                                       561187   727047970802066139
+  9997   9998  <p>I'm a software engineer based in Guadalajar...     2008-09-19 21:36:27.763  ...     713                http://pablasso.com     10278 -5420654786267601664
+  9998   9999  <p>I am a software engineer in Athens, Greece....     2008-09-19 21:39:34.043  ...     530                                        10279 -5394005644704851735
+  9999  10000                                                        2008-09-19 21:45:50.410  ...      58                                        10280 -7219539445845054025
+  
+  [10000 rows x 15 columns]
+  PSEUDOMYNIZED DATA :
+            ID                                            ABOUTME  ...                                   LOCATION                     WEBSITEURL
+  0         1  <p>Play reach agency source. Open fly trade vi...  ...                      Martinezfort, Liberia    https://martinez-mills.info
+  1         2  <p>Camera reflect collection father of. Speech...  ...  Zamoramouth, United States Virgin Islands   https://frazier-wallace.info
+  2         3                <p>Future size majority future.</p>  ...                         Garciaton, Georgia               https://shea.com
+  3         4  <p>Institution customer world day.\nWhatever d...  ...                    Amyfurt, American Samoa        https://gross-brock.com
+  4         5  <p>Yeah everyone baby drug. Name town dinner c...  ...                         Wendyville, Jersey  https://rodriguez-hubbard.com
+  ...     ...                                                ...  ...                                        ...                            ...
+  9995   9996  <p>Radio star first growth. May quickly here a...  ...                      New Lindsey, Mongolia              https://short.org
+  9996   9997  <p>Represent indeed in grow foreign rule list....  ...                       New Deborah, Comoros           https://pacheco.info
+  9997   9998  <p>Moment already life teach range. Occur poor...  ...      South Stephenstad, Dominican Republic            https://stevens.net
+  9998   9999  <p>Cell cut safe. Suddenly any use run anyone ...  ...                   West Chelseaport, Cyprus        https://hughes-page.com
+  9999  10000                         <p>Our me up four Mrs.</p>  ...                  Lake Cameronstad, Eritrea              https://cohen.com
+  
+  [10000 rows x 7 columns]
+  
+  
+  --> VERBOSE : clandestinio -> main() -------------------------------------------------------
+  TIMER :T + 6.518 seconds
+  Creating and importing worktable PSEUDO_Users_small_60869
+  
+  
+  --> VERBOSE : clandestinio -> main() -------------------------------------------------------
+  TIMER :T + 7.128 seconds
+  Creating indexes to speed final update
+  
+  
+  --> VERBOSE : clandestinio -> main() -------------------------------------------------------
+  TIMER :T + 7.158 seconds
+  Creating a copy of table dbo.Users_small into dbo.COPY_Users_small_63938...
+  
+  
+  --> VERBOSE : clandestinio -> main() -------------------------------------------------------
+  TIMER :T + 7.158 seconds
+  Copying table into dbo.COPY_Users_small_63938
+  
+  
+  --> VERBOSE : clandestinio -> main() -------------------------------------------------------
+  TIMER :T + 7.23 seconds
+  Creating indexes to speed final update
+  
+  
+  --> VERBOSE : clandestinio -> main() -------------------------------------------------------
+  TIMER :T + 7.257 seconds
+  Final substitution using 2 round(s) of 10000 rows from dbo.PSEUDO_Users_small_60869 into dbo.COPY_Users_small_63938
+  
+  
+  -->VERBOSE : clandestinio -> main() -------------------------------------------------------
+  TIMER :T + 7.258 seconds
+  final update : SET ANSI_WARNINGS OFF;BEGIN TRANSACTION ;  UPDATE dbo.COPY_Users_small_63938 SET  ABOUTME = PSD.ABOUTME ,  AGE = PSD.AGE ,  DISPLAYNAME = PSD.DISPLAYNAME ,  EMAILHASH = PSD.EMAILHASH ,  LOCATION = PSD.LOCATION ,  WEBSITEURL = PSD.WEBSITEURL FROM dbo.COPY_Users_small_63938 SRC  INNER JOIN (SELECT TOP(10000) * FROM dbo.PSEUDO_Users_small_60869 ORDER BY [index] ASC) PSD ON  SRC.ID = PSD.ID ; WITH PSD AS (SELECT TOP (10000) * FROM dbo.PSEUDO_Users_small_60869 ORDER BY [index] ASC) DELETE FROM PSD  ; COMMIT TRANSACTION ;  SET ANSI_WARNINGS ON ;
+  
+  
+  100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,  2.55it/s] 
+  -->VERBOSE : clandestinio -> main() -------------------------------------------------------
+  TIMER :T + 8.045 seconds
+  Cleaning worktable PSEUDO_Users_small_60869
+  
+  
+  Clandestinio has completed in 8.076989889144897 seconds
   ```
 
 

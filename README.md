@@ -199,7 +199,7 @@ OR
   Clandestinio has completed in 9.927576780319214 seconds
   ```
 
-* Cmap mode (-cmap):
+## Cmap mode (-cmap):
   ```shell
   py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small"  --force --cmap='DisplayName,Location' 
   Clandestinio has started at 2025-01-15 19:07:22.570647

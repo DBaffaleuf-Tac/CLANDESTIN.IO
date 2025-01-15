@@ -119,7 +119,7 @@ OR
 * --force : bypass the warning message in non dryrun mode, to allow users to run in silent / batch mode.
     
 # Examples
-* Minimal options :
+## Minimal options :
   ```shell
   $ py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small"
   Clandestinio has started at 2025-01-15 08:57:33.876401
@@ -134,7 +134,7 @@ OR
   Clandestinio has completed in 23.18284249305725 seconds
   ```
 
-* Silent mode (--force):
+## Silent mode (--force):
   ```shell
   $ py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --force 
   Clandestinio has started at 2025-01-15 09:05:55.981625
@@ -144,7 +144,7 @@ OR
   100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,  2.65it/s]
   Clandestinio has completed in 8.408372402191162 seconds
   ```
-* Dryrun mode (--dryun):
+## Dryrun mode (--dryun):
   ```shell
   $ py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --dryrun        
   Clandestinio has started in DRY RUN mode at 2025-01-15 09:08:12.659155
@@ -188,7 +188,7 @@ OR
   Clandestinio has completed in 6.762551307678223 seconds
   ```
 
-* Copytable mode (--copytable):
+## Copytable mode (--copytable):
   ```shell
   $ py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --copytable --force
   Clandestinio has started at 2025-01-15 09:10:56.195622
@@ -211,7 +211,7 @@ OR
   Clandestinio has completed in 5.395118713378906 seconds
   ```
 
-* Verbose mode (-verbose):
+## Verbose mode (-verbose):
   ```shell
   $ py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --copytable --force --verbose
   Clandestinio has started at 2025-01-15 09:13:48.422752

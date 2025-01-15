@@ -118,8 +118,39 @@ OR
 * --verbose : prints intermediary results, specifically data samples before and after substitution, columns identification, and timing.
 * --force : bypass the warning message in non dryrun mode, to allow users to run in silent / batch mode.
     
+# Examples
+* Minimal options :
+  ```shell
+    py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small"
+  Clandestinio has started at 2025-01-15 08:57:33.876401
+WARNING : Data will be substituted
+---------------- !!! WARNING - DRY RUN DEACTIVATED !!! ----------------
+---------------- !!! THE DATA WILL BE PSEUDONYMIZED !!! ---------------
+ARE YOU SURE YOU WANT TO PROCEED Y/N : Y
+------------ CONFIRMED, PROCEEDING WITH PSEUDONYMIZATION ... ------
+-> Pseudonimyze : proceeding 10000 rows in 2 batches of 10000  rows... 
+  0%|                                                                                                                                          | 0/2 [00:00<?, ?it/s]   ID                                            ABOUTME  AGE            CREATIONDATE  ...   VIEWS                     WEBSITEURL ACCOUNTID       CLANDESTINIOID       
+0   1  <p>Perform occur she ball as. Them play front ...   29 2008-07-31 00:00:00.000  ...     649             https://turner.com        -1  2389423017278223054      
+1   2  <p>Election option stop off week far. Improve ...   96 2008-07-31 14:22:31.287  ...  408587             https://larson.com         1  -287871349909645031      
+2   3  <p>Born road the himself. Kid watch candidate....   19 2008-07-31 14:22:31.287  ...   23966            https://johnson.com         2 -6362765319229744132      
+3   4  <p>Society minute garden before. Medical diffe...   56 2008-07-31 14:22:31.287  ...   24396              https://burke.com         3 -4061369308609067527      
+4   5  <p>Listen charge consumer hand anything mother...   41 2008-07-31 14:22:31.317  ...   73755   https://taylor-gonzalez.info         4  8169466687474132532      
+5   6  <p>Option woman great fall improve. Face recen...   83 2008-07-31 14:22:31.317  ...   11700  https://williams-campbell.net         5  8404573189013619947      
+6   7     <p>Suggest ahead management course manage.</p>   77 2008-07-31 21:33:24.057  ...    6372     https://oneill-obrien.info         6 -1250753836421744017      
+7   8  <p>Staff magazine table clearly. Source night ...   31 2008-07-31 21:35:26.517  ...    4949              https://wells.com         7  9200428163501998807      
+8   9  <p>Successful choose apply billion between cau...   19 2008-07-31 21:57:06.240  ...    3678      https://ramsey-miller.com         8   711313696397376486      
+9  10  <p>Former hair environmental for scene. Run le...   19 2008-08-01 00:59:11.147  ...    2123                https://kim.com    561854 -3547063632006113677      
+
+[10 rows x 15 columns]
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:05<00:00,  2.96s/it]
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:01<00:00,  1.55it/s]
+Clandestinio has completed in 23.18284249305725 seconds
+  ```
+*  
+  ```shell
+  ```
+
 # Notes and remarks
 
-# Examples
 
 # Stats

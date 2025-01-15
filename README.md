@@ -121,8 +121,8 @@ OR
 # Examples
 * Minimal options :
   ```shell
-    py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small"
-  Clandestinio has started at 2025-01-15 08:57:33.876401
+py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small"
+Clandestinio has started at 2025-01-15 08:57:33.876401
 WARNING : Data will be substituted
 ---------------- !!! WARNING - DRY RUN DEACTIVATED !!! ----------------
 ---------------- !!! THE DATA WILL BE PSEUDONYMIZED !!! ---------------

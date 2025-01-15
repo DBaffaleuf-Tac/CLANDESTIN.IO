@@ -40,6 +40,13 @@ For now, Clandestinio is only compatible with SQL Server. There are plans to ext
     conda install --yes --file requirements.txt
   ```
 
+# Configuration
+Before running anything a little configuration is needed. Use the .sample.env file to create your own .env file :
+  ```shell
+   cp .sample.env .env
+  ```
+
+
 # Usage
   ```shell
   python3 clandestinio.py <options ...>
@@ -64,10 +71,16 @@ OR
 |  -V / --verbose  |      False      |       N         |      When set, runs in verbose mode                                                    |
 |   -F / --force   |      False      |       N         |      When set and with dryrun off, overrides the test (run in btach mode)              |
 
-
-
-
-
+* --provider : as of v0.1, only SQL Server is available. Only use --provider=mssql
+* --tablename : full qualified name means schema.object notation, see examples below
+* --cmap : when not set, Clandestinio runs in discovery mode and leverages generative AI to detect which column can be considered personnal data. When set, forces a list of columns.
+* --copytable : useful to test results before implementing them. When set, a full copy of the base table is made and prefixed COPY_% and only data in this table will be substituted
+* --dryrun : when not set, in interactive mode a warning banner asks for confirmation before moving on with substitution. See examples below.
+* --verbose : prints intermediary results, specifically data samples before and after substitution, columns identification, and timing.
+* --force : bypass the warning message in non dryrun mode, to allow users to run in silent / batch mode.
+    
 # Notes and remarks
+
+# Examples
 
 # Stats

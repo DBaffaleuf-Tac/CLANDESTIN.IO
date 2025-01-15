@@ -133,9 +133,35 @@ OR
   100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:01<00:00,  1.55it/s]
   Clandestinio has completed in 23.18284249305725 seconds
   ```
-*  
+
+*  Silent mode (--force):
+  ```shell
+  py -3 .\clandestinio.py --provider="mssql" --database="stackoverflow" --tablename="dbo.Users_small" --force 
+  Clandestinio has started at 2025-01-15 09:05:55.981625
+  WARNING : Data will be substituted
+  -> Pseudonimyze : proceeding 10000 rows in 2 batches of 10000  rows... 
+  100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:05<00:00,  2.92s/it] 
+  100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,  2.65it/s]
+  Clandestinio has completed in 8.408372402191162 seconds
+  ```
+
+
+*  Dryrun mode (--dryun):
   ```shell
   ```
+
+*  Copytable mode (--copytable):
+  ```shell
+  ```
+
+*  Cmap mode (-cmap):
+  ```shell
+  ```
+
+*  Verbose mode (-verbose):
+  ```shell
+  ```
+
 
 # Notes and remarks
 

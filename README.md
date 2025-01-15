@@ -80,9 +80,9 @@ BATCHSIZE=10000
 * TEMPERATURE : the temperature parameter of the model. The default and recommended value is 0.0 so the model responses are consistent across multiple runs.
 * HOST : this is where you don't want to mess up. Put the name of your **non production** database server here
 * PORT : port of your  **non production** database server here. Even if each RDBMS has a default port, specify it. 
-* USERNAME : name of the database user to query the data table and propagate substitutions. THis user must have read - write access to the table mentionned in --tablename
+* USERNAME : name of the database user to query the data table and propagate substitutions. This user must have read - write access to the table mentionned in --tablename
 * PASSWORD : obviously the password. For SQL Server this can be left blank if INTEGRATED is set to 1 (see below)
-* INTEGRATED : 0 is the default. Only for SQL Server. When set to 1, integrated authentication is used and no password has to be provided. This is the recommended method.
+* INTEGRATED : 1 is the default. Only for SQL Server. When set to 1, integrated authentication is used and no password has to be provided, other wise a password is needed. Using INTEGRATED=1 is the preferred method.
 * FRAC : % of the data sampled to identify personnal data in discovery mode (when --cmap is not used). 10% is the default.
 * BATCHSIZE : both the number of rows passed to the Gen AI model for substitution in each batch, and the number of rows updated in the final / copy table per transaction. 10K is the default, but take a look at the Stats paragraph at the end to seek for the value that most suits your working set.     
 

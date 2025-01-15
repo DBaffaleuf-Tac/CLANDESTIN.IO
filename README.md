@@ -350,10 +350,6 @@ OR
   Clandestinio has completed in 8.076989889144897 seconds
   ```
 
-
-# Notes and remarks
-
-
 # Stats
 ## Adjusting BATCHSIZE according to your working set :
 Depending on the amount of data to pseudonymize, the value of batchsize has a tremendous effect on the overall performance.

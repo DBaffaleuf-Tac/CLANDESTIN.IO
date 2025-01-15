@@ -2,6 +2,8 @@
 
 Clandestinio is a python command-line tool to help pseudonymize data **in your test/dev/UAT environments**, on a per-table basis. It is based on generative AI to help identify which columns in the table can be considered sensitive as per the GDPR regulations, and eventually substitue data while preserving the semantic. 
 
+It assumes that you have reloaded your live data on a **non production** database server (can be uat, test, development, anything else but production), and can be run at the end of your refresh pipeline for each table you would want to pseudonymize. 
+
 # Disclaimer - Very important
 Pseudonymizing can be irreversible to your data. The location of the data to be pseudonymized is specified in a configuration file, but it is easy to make mistakes and point to the wrong server and port. There is some protection built in the tool when run in interactive mode but it cannot prevent all user mistakes. 
 
@@ -40,12 +42,49 @@ For now, Clandestinio is only compatible with SQL Server. There are plans to ext
     conda install --yes --file requirements.txt
   ```
 
-# Configuration
+# Configuration .env file 
 Before running anything a little configuration is needed. Use the .sample.env file to create your own .env file :
   ```shell
    cp .sample.env .env
   ```
+**Contents of the .env file :**
+```shell
+# !!! Sensitive information !!! 
 
+# Put your Groq API KEY here
+GROQ_API_KEY="YOUR_GROQ_API_KEY_HERE"
+
+# LIST OF SUPPORTED MODELS : https://console.groq.com/docs/models 
+#MODEL="mixtral-8x7b-32768"
+#MODEL="llama3-70b-8192"
+#MODEL="llama-3.1-70b-versatile"
+MODEL="YOUR_MODEL_HERE"
+TEMPERATURE="0.0"
+
+# Database Server connection info 
+HOST="YOUR_DATABASE_HOST_SERVER_HERE"
+PORT="YOUR_DATABASE_HOST_PORT_HERE"
+USERNAME="YOUR_DATABASE_USERNAME_HERE"
+PASSWD="YOUR_DATABASE_PASSWORD_HERE"
+# If DB Server is MSSQL, prefer using integrated security with no passwd by setting INTEGRATED=1 
+INTEGRATED=0
+# SAMPLE VALUE FOR IA PREDICTION
+FRAC=0.1
+# BATCHSIZE FOR PSEUDONYMIZATION
+BATCHSIZE=10000
+```
+
+**Settings in the file :** 
+* GROQ_API_KEY : this is where you put your GROQ API KEY. You can create your own API key at https://console.groq.com/keys
+* MODEL : this is the name of the Gen model you are using. You can change the model according to your needs. The list of available models can be found at https://console.groq.com/docs/models
+* TEMPERATURE : the temperature parameter of the model. The default and recommended value is 0.0 so the model responses are consistent across multiple runs.
+* HOST : this is where you don't want to mess up. Put the name of your **non production** database server here
+* PORT : port of your  **non production** database server here. Even if each RDBMS has a default port, specify it. 
+* USERNAME : name of the database user to query the data table and propagate substitutions. THis user must have read - write access to the table mentionned in --tablename
+* PASSWORD : obviously the password. For SQL Server this can be left blank if INTEGRATED is set to 1 (see below)
+* INTEGRATED : 0 is the default. Only for SQL Server. When set to 1, integrated authentication is used and no password has to be provided. This is the recommended method.
+* FRAC : % of the data sampled to identify personnal data in discovery mode (when --cmap is not used). 10% is the default.
+* BATCHSIZE : both the number of rows passed to the Gen AI model for substitution in each batch, and the number of rows updated in the final / copy table per transaction. 10K is the default, but take a look at the Stats paragraph at the end to seek for the value that most suits your working set.     
 
 # Usage
   ```shell

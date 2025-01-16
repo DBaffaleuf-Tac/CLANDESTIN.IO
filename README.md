@@ -230,7 +230,7 @@ OR
   
   
   --> VERBOSE : clandestinio -> main() -------------------------------------------------------
-  DOTENV VARIABLES:  OrderedDict({'GROQ_API_KEY': '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', 'MODEL': 'llama-3.1-70b-versatile', 'TEMPERATURE': '0.0', 'HOST': 'DAVID-PC', 'PORT': '1433', 'USERNAME': 'dbaff-sql', 'PASSWD': 'capdata', 'INTEGRATED': '0', 'FRAC': '0.1', 'BATCHSIZE': '10000'})
+  DOTENV VARIABLES:  OrderedDict({'GROQ_API_KEY': '***********************************************************', 'MODEL': 'llama-3.1-70b-versatile', 'TEMPERATURE': '0.0', 'HOST': 'DAVID-PC', 'PORT': '1433', 'USERNAME': 'dbaff-sql', 'PASSWD': 'capdata', 'INTEGRATED': '0', 'FRAC': '0.1', 'BATCHSIZE': '10000'})
   
   
   --> VERBOSE : clandestinio -> main() -------------------------------------------------------

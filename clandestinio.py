@@ -23,6 +23,7 @@ def checkParams(__PROVIDER, __DATABASE, __TABLENAME,__CMAP,__DRYRUN,__VERBOSE):
     # DRY RUN TESTING AND WARNING NOTIFICATION MESSAGES
     # if --dryrun is not mentionned, send a warning message asking for confirmation 
     # if not confirmed, the execution is aborted and the program exits
+    # In batch mode, use --force to skip this test 
     if __DRYRUN == False:
         print('---------------- !!! WARNING - DRY RUN DEACTIVATED !!! ---------------- ')
         print('---------------- !!! THE DATA WILL BE PSEUDONYMIZED !!! ---------------')
@@ -70,6 +71,7 @@ def pseudonymize(sourcerecords,GDPRcolumnsList,UQCOLS,batches,batchsize,settings
             # Pseudonymize the selected batchsize rows and return a new dataframe    
             try:
                 reduxGDPRSubsituteData = Pseudonymizer.replaceGDPRData(settings['GROQ_API_KEY'],settings["MODEL"],settings["TEMPERATURE"],reduxRecords)
+                
                 if type(reduxGDPRSubsituteData) is pd.core.frame.DataFrame: 
                     pseudonymizedData = pd.concat([pseudonymizedData,reduxGDPRSubsituteData],ignore_index=False)
                     # Remove pseudonymized rows from the original dataframe by concatenation and duplicates removal
@@ -87,8 +89,11 @@ def pseudonymize(sourcerecords,GDPRcolumnsList,UQCOLS,batches,batchsize,settings
 
     reduxFinal = pd.concat([UQRecords,reduxRecords],axis=1,ignore_index=False)
     pseudonymizedFinal = pd.concat([UQRecords,pseudonymizedData],axis=1, ignore_index=False)
-
+    
     return pseudonymizedFinal, reduxFinal
+
+def upTime(start,now):
+    return round(now-start,3) 
 
 #  -------------------------------------------------------------------------------------------------------------
 # FUNCTION main()
@@ -115,8 +120,7 @@ def main():
     __TABLENAME=""
     __CMAP=[]
   
-    start=time.time()
-    print(f"Clandestinio has started at {datetime.datetime.fromtimestamp(start)}")
+ 
     
     # ARGPARSE -----------------------------------------------------------------------------------------------------
     with open('revision','r') as revision:
@@ -142,15 +146,27 @@ def main():
     __PROVIDER=config["provider"]
     __DATABASE=config["databasename"].replace("'","")
     __TABLENAME=config["tablename"].replace("'","")
+
     __CMAP=config["cmap"]
+    if __CMAP:
+        __CMAP = __CMAP.replace("'","").upper().split(',')    # Converts CSV string into a python list object
+        
     __COPYTABLE=config["copytable"]    
     __DRYRUN=config["run"]
     __VERBOSE=config["verbose"]
     __PARALLEL=config["parallel"]
     __FORCE=config["force"]    
 
+    if __DRYRUN == 1:
+        start=time.time()
+        print(f"Clandestinio has started in DRY RUN mode at {datetime.datetime.fromtimestamp(start)}")
+        print(f"WARNING : Only examples of substituted data will be presented")
+    else: 
+        start=time.time()
+        print(f"Clandestinio has started at {datetime.datetime.fromtimestamp(start)}")
+        print(f"WARNING : Data will be substituted")
 
-    if __VERBOSE == 1:
+    if __VERBOSE == 1:        
         print ('--> ENTERING VERBOSE MODE ----------------------------------------------------------\n')
 
     # ARGV sanity checks -------------------------------------------------------------------------
@@ -196,6 +212,8 @@ def main():
         cstr = server.makeConnectionString(odbcdriver,settings['HOST'],__DATABASE,settings['USERNAME'],settings['PASSWD'],settings['INTEGRATED'])
         if __VERBOSE == 1:
             print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
+            __NOW=upTime(start,time.time())
+            print(f"TIMER :T + {__NOW} seconds")
             print("Connection String: ",cstr)
             print('\n')
 
@@ -212,7 +230,28 @@ def main():
             UQCOLS = server.executeQuery(cstr,server.findUniqueColumns(__TABLENAME))[0][1].upper().split(',')
             if __VERBOSE == 1:
                 print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
+                __NOW=upTime(start,time.time())
+                print(f"TIMER :T + {__NOW} seconds")
                 print(f"At least one unique constraint has been found on {__TABLENAME} on columns ({UQCOLS})")
+                print('\n')            
+
+        # Also, identify all columns used as foreign key columns in the source table, and remove them 
+        # eventually from the list of identified gdpr columns : we don't want to deal with constraints 
+        # update in the source table
+        FKCONSTRAINTEXISTS = server.executeQuerySingleValue(cstr,server.FKConstraintExists(__TABLENAME))
+        if FKCONSTRAINTEXISTS > 0:
+            FKCOLS = server.executeQuery(cstr,server.findFKCOlumns(__TABLENAME))
+            FKCOLSLIST = []
+
+            for item in FKCOLS:
+                FKCOLSLIST = FKCOLSLIST + item[0].upper().split(',') 
+ 
+            if __VERBOSE == 1:
+                print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
+                __NOW=upTime(start,time.time())
+                print(f"TIMER :T + {__NOW} seconds")
+                print(f"At least one foreign key constraint has been found on {__TABLENAME} on columns ({FKCOLSLIST})")
+                print("They will be removed from the target GDPR list")
                 print('\n')            
 
         # Load data ----------------------------------------------------------------------------------
@@ -237,23 +276,47 @@ def main():
         # 4) Replacing NaNs
         sourcerecords = sourcerecords.fillna('')
 
-        # 3) Sampling DOTENV.FRAC% non-NaN random values for LLM to detect existence of GDPR data
-        frac=float(settings['FRAC'])
-        samplerecords=sourcerecords.sample(frac=frac,random_state=1).head(10)
+        if not __CMAP:
+            # 3) Sampling DOTENV.FRAC% non-NaN random values for LLM to detect existence of GDPR data
+            frac=float(settings['FRAC'])
+            samplerecords=sourcerecords.sample(frac=frac,random_state=1).head(10)
 
-        if __VERBOSE == 1:
-            print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
-            print(f"{frac*100} % sampling top 10 rows for GDPR data identification: ",samplerecords)
-            print('\n')
+            if __VERBOSE == 1:
+                print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
+                __NOW=upTime(start,time.time())
+                print(f"TIMER :T + {__NOW} seconds")
+                print(f"{frac*100} % sampling top 10 rows for GDPR data identification: ",samplerecords)
+                print('\n')
+            
+            # IA -> Target columns ID --------------------------------------------------------------------
+            GDPRfinder = assistant()
+            GDPRcolumnsList = GDPRfinder.findGDPRData(settings['GROQ_API_KEY'],settings["MODEL"],settings["TEMPERATURE"],samplerecords).split(',')
+        else :       
+            if __VERBOSE == 1:
+                print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
+                __NOW=upTime(start,time.time())
+                print(f"TIMER :T + {__NOW} seconds")
+                print('WARNING : Not sampling, a set of target columns have been explicitely provided via --cmap')
+                print('\n')
+            
+            GDPRcolumnsList = __CMAP
+
+        # Eventually remove FKCOLSLIST columns from GDPRcolumnsList 
+        if FKCONSTRAINTEXISTS > 0:
+            for c1 in GDPRcolumnsList:
+                for c2 in FKCOLSLIST:
+                    if c1.lower() == c2.lower():
+                        GDPRcolumnsList.remove(c1)
+                        print(f'WARNING : column {c1} is part of a foreign key constraint and will be removed from the list')
+                        print('\n') 
         
-        # IA -> Target columns ID --------------------------------------------------------------------
-        GDPRfinder = assistant()
-        GDPRcolumnsList = GDPRfinder.findGDPRData(settings['GROQ_API_KEY'],settings["MODEL"],settings["TEMPERATURE"],samplerecords).split(',')
-
         if __VERBOSE == 1:
             print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
+            __NOW=upTime(start,time.time())
+            print(f"TIMER :T + {__NOW} seconds")
             print(f"Identified Columns for the dataset are : {GDPRcolumnsList}")
             print('\n')
+
 
         # IA -> Local pseudonymization ---------------------------------------------------------------        
         batchsize=int(settings["BATCHSIZE"])
@@ -261,18 +324,17 @@ def main():
             print('BATCHSIZE CANNOT BE ZERO, CHANGE THE VALUE IN .ENV FILE !!!')
             sys.exit(Errors.FATAL)
         else:
-            if batchsize <= len(sourcerecords):
+            if batchsize > len(sourcerecords):
                 batches=1
             else:    
                 batches=int(len(sourcerecords)/batchsize) + 1
                
         # Pseudonymization Loop of batchsize rows
-        print(f"-> Proceeding {len(sourcerecords)} rows in {batches} batches of {batchsize}  rows... ")
+        print(f"-> Pseudonimyze : proceeding {len(sourcerecords)} rows in {batches} batches of {batchsize}  rows... ")
         
         # single / multi threaded depending on --parallel
         # --parallel not used at this point
         # SINGLE - THREADED
-        
         pseudonymizedData, reduxRecords = pseudonymize(sourcerecords,GDPRcolumnsList,UQCOLS,batches,batchsize,settings)
 
         if __VERBOSE == 1 or __DRYRUN == True:
@@ -280,7 +342,9 @@ def main():
                 print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
             elif __DRYRUN == True:
                 print ('--> DRYRUN : clandestinio -> main() -------------------------------------------------------')
-            
+
+            __NOW=upTime(start,time.time())
+            print(f"TIMER :T + {__NOW} seconds")
             print(f"ORIGINAL DATA : \n {sourcerecords}")
             print(f"PSEUDOMYNIZED DATA : \n {pseudonymizedData}")
             print('\n')
@@ -288,44 +352,118 @@ def main():
         if __DRYRUN == False:
             # Rename DF columns with original ones (not uppercase)
             # To deal with case sensitive collation on the server side
-            for PSC in pseudonymizedData.columns:
-                for OC in originalColumns:
-                    if OC.upper() == PSC.upper():
-                        pseudonymizedData.rename(columns={f'{PSC}':f'{OC}'})
-
+            if not __CMAP:
+                for PSC in pseudonymizedData.columns:
+                    for OC in originalColumns:
+                        if OC.upper() == PSC.upper():
+                            pseudonymizedData.rename(columns={f'{PSC}':f'{OC}'})
+            
             # Import local pseudonymized -----------------------------------------------------------------
             OWNER=__TABLENAME.split('.')[0]       
             TBL=__TABLENAME.split('.')[1]
             WTNAME=f"PSEUDO_{TBL}_{str(random.randint(0,99999))}"
-                        
+            
+            if __VERBOSE == 1:  
+                print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
+                __NOW=upTime(start,time.time())
+                print(f"TIMER :T + {__NOW} seconds")
+                print(f'Creating and importing worktable {WTNAME}')
+                print('\n')
+
             if not server.loadWorkTable(cstr,OWNER,WTNAME,pseudonymizedData):
                 print(f"Error during worktable loading, aborting...") 
+                sys.exit(Errors.FATAL)
+            
+            # Create index  on column 'index' to speed join in final update 
+            if __VERBOSE == 1:
+                print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
+                __NOW=upTime(start,time.time())
+                print(f"TIMER :T + {__NOW} seconds")
+                print(f"Creating indexes to speed final update")
+                print('\n')
+            
+            CREATEINDEXPSDSQLFORJOIN=server.createUniqueIndex(OWNER+"."+WTNAME, UQCOLS)
+            if not server.createIndexPSD(cstr,CREATEINDEXPSDSQLFORJOIN):
+                print(f"Error during index creation on {WTNAME}({UQCOLS}), aborting...") 
                 sys.exit(Errors.FATAL)
 
             # Eventual source copy ------------------------------------------------------------------------
             if __COPYTABLE == True:
                 # Copy the source table before substitution
                 COPYTABLENAME=f"{OWNER}.COPY_{TBL}_{str(random.randint(0,99999))}"
-                print(f"Creating a copy of table {__TABLENAME} into {COPYTABLENAME}...")                 
+                if __VERBOSE == 1:
+                    print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
+                    __NOW=upTime(start,time.time())
+                    print(f"TIMER :T + {__NOW} seconds")
+                    print(f"Creating a copy of table {__TABLENAME} into {COPYTABLENAME}...")                 
+                    print('\n')
                 COPYTABLENAMESQL=server.copySourceTableSQL(__TABLENAME,COPYTABLENAME)
+
+                if __VERBOSE == 1:  
+                    print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
+                    __NOW=upTime(start,time.time())
+                    print(f"TIMER :T + {__NOW} seconds")
+                    print(f'Copying table into {COPYTABLENAME}')
+                    print('\n')
+
                 if not server.copySourceTable(cstr,COPYTABLENAMESQL):
                     print(f"Error during source table copy, aborting...") 
                     sys.exit(Errors.FATAL)       
                 else:
+                    # Create index  on unique column(s)  to speed join in final update 
+                    if __VERBOSE == 1:
+                        print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
+                        __NOW=upTime(start,time.time())
+                        print(f"TIMER :T + {__NOW} seconds")
+                        print(f"Creating indexes to speed final update")
+                        print('\n')
+                    
+                    CREATEINDEXCPYSQLFORJOIN=server.createUniqueIndex(COPYTABLENAME, UQCOLS)
+                    if not server.createIndexPSD(cstr,CREATEINDEXCPYSQLFORJOIN):
+                        print(f"Error during index creation on {COPYTABLENAME}({UQCOLS}), aborting...") 
+                        sys.exit(Errors.FATAL)
+
+                    # Final name substitution DESTINATIONNAME <= COPYNAME 
                     __TABLENAME=COPYTABLENAME
-            
+
             # Final substitution -------------------------------------------------------------------------
             # Based on update with JOIN on UNIQUE KEY identified as UQCOLS
             # Using BATCHSIZE to group commits and avoid xact log overflow
+            if __VERBOSE == 1:  
+                print ('--> VERBOSE : clandestinio -> main() -------------------------------------------------------')
+                __NOW=upTime(start,time.time())
+                print(f"TIMER :T + {__NOW} seconds")
+                print(f'Final substitution using {batches} round(s) of {batchsize} rows from {OWNER+"."+WTNAME} into {__TABLENAME}')
+                print('\n')
+
+            UPDSQLFINAL = server.makeFinalUpdSQL(__TABLENAME,OWNER+"."+WTNAME,UQCOLS,GDPRcolumnsList,batchsize)
+            if __VERBOSE == 1:  
+                print ('-->VERBOSE : clandestinio -> main() -------------------------------------------------------')
+                __NOW=upTime(start,time.time())
+                print(f"TIMER :T + {__NOW} seconds")
+                print(f'final update : {UPDSQLFINAL}')
+                print('\n')
+
+            for i in tqdm(range(batches)):    
+                if not server.finalUpdate(cstr,UPDSQLFINAL):
+                    print(f"Error during final update, aborting...") 
+                    sys.exit(Errors.FATAL) 
 
 
             # Cleaning -----------------------------------------------------------------------------------
             # Drop remaining DFs
             # Drop Worktable
-            if not server.dropWorkTable(cstr,OWNER,WTNAME): # <-- does not work if the table not empty grrrr alchemy !!!
-                print(f"Error during dropping worktable, aborting...")
-                sys.exit(Errors.FATAL)
+            if __VERBOSE == 1:  
+                print ('-->VERBOSE : clandestinio -> main() -------------------------------------------------------')
+                __NOW=upTime(start,time.time())
+                print(f"TIMER :T + {__NOW} seconds")
+                print(f'Cleaning worktable {WTNAME}')
+                print('\n')
 
+            if not server.dropWorkTable(cstr,OWNER,WTNAME): 
+               print(f"Error during dropping worktable, aborting...")
+               sys.exit(Errors.FATAL)
+        
     end=time.time()
     elapsed=(end-start)
     print(f"Clandestinio has completed in {elapsed} seconds")

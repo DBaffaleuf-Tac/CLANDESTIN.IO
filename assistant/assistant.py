@@ -28,9 +28,14 @@ class assistant():
         llm = ChatGroq(model = model,temperature = temperature, api_key = groq_api_key)
         # Adding https://pypi.org/project/Faker/ to the whitelist of dependencies
         sdf = SmartDataframe(sampledata,config = {'llm':llm, "custom_whitelisted_dependencies": ["faker"]})
+        
         try:
             redux = sdf.chat(AIPrompts.replaceGDPRData)
             if type(redux) is pd.core.frame.DataFrame:
+                # when using cmap, PandasAI .chat() rename the columns using integers
+                # cf https://github.com/Sinaptik-AI/pandas-ai/discussions/506#discussioncomment-7457136 
+                # so forcing column names with the original ones
+                redux.columns=sampledata.columns 
                 return redux
             else:
                 print(f'Steps has been skipped because redux is type of {type(redux)}')

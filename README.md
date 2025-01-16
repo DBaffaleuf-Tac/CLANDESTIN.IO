@@ -23,7 +23,7 @@ Bottom-line :
   - polars
   - tqdm
 
-For now, Clandestinio is only compatible with SQL Server. There are plans to extend the capabilities to other RDBMS such as MariaDB, PostgreSQL, MongoDB, and possibly excel spreadsheets. 
+See requirements.txt for a complete list. For now, Clandestinio is only compatible with SQL Server. There are plans to extend the capabilities to other RDBMS such as MariaDB, PostgreSQL, MongoDB, and possibly excel spreadsheets. 
  
 # Installation
 * Extract the repository to your local workstation, laptop using git:
